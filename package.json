@@ -1,12 +1,11 @@
 {
-  "name": "webpack_test",
+  "name": "webpack4_demo",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack",
-    "server": "webpack-dev-server"
+    "build": "webpack"
   },
   "author": "",
   "license": "ISC",
@@ -21,6 +20,7 @@
     "img-loader": "^3.0.1",
     "less": "^3.0.2",
     "less-loader": "^4.1.0",
+    "lodash": "^4.17.14",
     "node-sass": "^4.9.0",
     "postcss-loader": "^2.1.4",
     "purify-css": "^1.2.5",
@@ -28,7 +28,7 @@
     "sass-loader": "^7.0.1",
     "style-loader": "^0.21.0",
     "url-loader": "^1.0.1",
-    "webpack": "^3.6.0",
-    "webpack-dev-server": "^2.9.7"
+    "webpack": "^4.35.3",
+    "webpack-cli": "^3.3.5"
   }
 }

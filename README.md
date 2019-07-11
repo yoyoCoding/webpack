@@ -1,109 +1,98 @@
 # webpack
-## webpack3+ studying
+## webpack4+ studying
 
-## 1.配置入口、出口
-多入口多出口配置：
-`entry:{
-	entry: '',
-	entry2: ''
-}
-output:{
-	path: '',
-	filename: '[name].js'
-}`
+## 起步
+### 目录结构
+```
+webpack4_demo
+|-dist
+ |-index.html
+|-src
+ |-index.js
+|-package.json
+```
 
-## 2.配置本地服务器
-npm下载(webpack-dev)->devServer配置
+### 安装导入lodash, 处理数组对象等
+运行demo
+```
+webpack4_demo
+|-dist
+ |-index.html
+ |-bundle.js
+|-src
+ |-index.js
+|-package.json
+```
 
-## 3.loader下载配置[module]
-npm下载->mudule配置->js import
-loaders三种写法
+### webpack配置文件
+webpack.config.js
+在配置npm script之前可以使用`npx webpack`运行打包程序, 而不需要全局安装`webpack-cli`, 配置npm script之后, 则可以像`npx`一样运行脚本
+`"build": webpack`
+```
+webpack4_demo
+|-dist
+ |-index.html
+ |-bundle.js
+|-src
+ |-index.js
+|-webpack.config.js
+|-package.json
+```
 
-type1:
+## 管理资源
+在 webpack 出现之前，前端开发人员会使用 grunt 和 gulp 等工具来处理资源，并将它们从 /src 文件夹移动到 /dist 或 /build 目录中。同样方式也被用于 JavaScript 模块，但是，像 webpack 这样的工具，将动态打包(dynamically bundle)所有依赖项（创建所谓的依赖图(dependency graph)）。这是极好的创举，因为现在每个模块都可以明确表述它自身的依赖，我们将避免打包未使用的模块。
 
-`module: {
-	rules: [
-		{
-			test: /\.css$/
-			use: ['style-loader','css-loader']
-		}
-	]
-}`
+webpack 最出色的功能之一就是，除了 JavaScript，还可以通过 loader 引入任何其他类型的文件。也就是说，以上列出的那些 JavaScript 的优点（例如显式依赖），同样可以用来构建网站或 web 应用程序中的所有非 JavaScript 内容。
 
-type2:
+### 配置css
+`npm install --save-dev style-loader css-loader`
+```javascript
+module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          'css-loader'
+        ]
+      }
+    ]
+  }
+```
+当该模块运行时，含有 CSS 字符串的 `<style>` 标签，将被插入到 html 文件的 `<head>`中
 
-`module: {
-	rules: [
-		{
-			test: /\.css$/
-			loader: ['style-loader','css-loader']
-		}
-	]
-}`
+### 加载图片
+`npm install file-loader --save-dev`
+无论是在js中import导入图片，还是在css中加载背景图片，亦或是在html中src引入图片，`file--loader`都能将图像处理，打包到`output`目录，得到一个最终url，并将本地开发的图片路径替换为`output`目录的最终url
 
-type3:
-
-`module: {
-	rules: [
-		{
-			test: /\.css$/
-			loader: [
-				{
-					loader: 'style-loader'
-				},
-				{
-					loader: 'css-loader'
-				}
-			]
-		}
-	]
-}`
-
-### (1)style-loader/css-loader
-**style-loader:** 用来将css插入到页面的style标签
-**css-loader:** 用来处理css中的url
-### (2)file-loader/url-loader
-**file-loader:**
-解决引用路径的问题，webpack将各个模块打包成一个文件，因此我们样式中的url路径是相对入口html页面的，而不是相对于原始css文件所在的路径的。这就会导致图片引入失败。这个问题是用file-loader解决的，file-loader可以解析项目中的url引入（不仅限于css），根据我们的配置，将图片拷贝到相应的路径，再根据我们的配置，修改打包后文件引用路径，使之指向正确的文件。
-
-**url-loader:** (url-loader封装了file-loader,可以不用下载file-loader)
-如果图片较多，会发很多http请求，会降低页面性能。这个问题可以通过url-loader解决。url-loader会将引入的图片编码，生成dataURl。相当于把图片数据翻译成一串字符。再把这串字符打包到文件中，最终只需要引入这个文件就能访问图片了。当然，如果图片较大，编码会消耗性能。因此url-loader提供了一个limit参数，小于limit字节的文件会被转为DataURl，大于limit的还会使用file-loader进行copy。
-### (3)html-withimg-loader: 在html中使用<img>标签引入图片
-### (4)less/less-loader: 解析less文件
-### (5)node-sass/sass-loader: 解析scss文件
-### (6)postcss-loader: css处理平台
-
-## 4.插件下载配置[plugins]
-npm下载(js压缩内置无需下载)->配置文件引入require->plugins new(多个以,分隔)
-### (1)uglifyjs(uglifyjs-webpack-plugin) - js压缩
-### (2)htmlPlugin(html-webpack-plugin) - html打包
-### (3)extractTextPlugin(extract-text-webpack-plugin) - (打包后的)文件分离
-### (4)autoprefixer - css自动添加前缀
-### (5)purifycss-webpack - 消除无用的css(需要安装purify-css包,必须配合extract-text-webpack-plugin)
-### (6)ProvidePlugin - webpack内置插件,全局引入第三方类库
-引入第三方类库的两种方法
-首先npm install 第三方类库
-``type1:`` 
-在相关文件直接引入(以jquery为例)：import $ from 'jquery' 
-[引用后不管你在代码中使用不适用该类库,都会把该类库打包起来,这样有时就会让代码产生冗余]
-``type2:`` 
-使用webpack自带插件ProvidePlugin,在webpack.config.js中配置
-[引用后只有在类库使用时,才按需进行打包]
-### (7)BannerPlugin - webpack内置插件,自动添加版权或开发者声明
-### (8)optimize - webpack内置插件,打包优化
-### (9)copyWebpackPlugin(copy-webpack-plugin) - 用于静态资源转移(如设计图、开发文档等)
-
-## 5.配置watch
-按保存键,webpack自动打包
-``step1:`` 
-在webpack.config.js中配置
-``step2:`` 
-终端使用命令:webpack --watch进行打包
-
-## 6.webpack优化黑技能
-### (1)抽离第三方类库(以jquery为例)
-修改入口文件->引入插件进行配置(抽离位置)
-
-## 未完待续...
+### 加载字体
+与上同理，通过配置好 loader 并将字体文件放在合适的地方，可以通过一个 @font-face 声明引入。本地的 url(...) 指令会被 webpack 获取处理，就像它处理图片资源一样
 
 
+## 管理输出
+### 多入口
+```javascript
+entry: {
+    app: './src/index.js',
+    print: './src/print.js'
+  },
+  output: {
+    filename: '[name].bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  }
+```
+
+### 管理多入口
+如果有多个入口，则会打包生成多个`*.bundle.js`文件，为了动态将打包生成的bundle文件添加到打包的index.html，可以使用`HtmlWebpackPlugin`，使用此插件后将会重新打包index.html文件，并将所有生成bundle文件添加到多个script标签中
+`npm install --save-dev html-webpack-plugin`
+```javascript
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+...
+plugins: [
+  new HtmlWebpackPlugin({
+    title: 'Output Management'
+  })
+]
+```
+若想了解更多请看官方文档  [html-webpack-plugin仓库](https://github.com/jantimon/html-webpack-plugin 'title')
+额外功能可查看` html-webpack-template`
