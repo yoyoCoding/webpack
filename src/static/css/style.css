@@ -8,4 +8,5 @@ html,body{
 button{
   height: 40px;
   line-height: 40px;
+  margin-left: 50px;
 }

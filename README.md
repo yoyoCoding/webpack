@@ -236,3 +236,21 @@ if (module.hot) {
 ### HMR 修改样式表
 借助于 `style-loader` 的帮助，CSS 的模块热替换实际上是相当简单的。当更新 CSS 依赖模块时，此 loader 在后台使用 `module.hot.accept` 来修补(patch) `<style>` 标签
 直接使用`style-loader` `css-loader`就可实现css热更新
+
+
+## 生产环境构建
+### 配置
+使用`webpack-merge`将彼此独立的webpack配置合并(开发环境配置、生产环境配置、通用配置)  
+`npm install --save-dev webpack-merge`  
+
+### Minification
+注意，虽然 `UglifyJSPlugin` 是代码压缩方面比较好的选择，但是还有一些其他可选择项。以下有几个同样很受欢迎的插件：  
+- BabelMinifyWebpackPlugin
+- ClosureCompilerPlugin
+
+### source map
+在生产环境中启用 source map，因为它们对调试源码(debug)和运行基准测试(benchmark tests)很有帮助。虽然有如此强大的功能，然而还是应该针对生成环境用途，选择一个构建快速的推荐配置（具体细节请查看 [devTool](https://www.webpackjs.com/configuration/devtool/ 'title')）
+
+### 指定环境
+许多 library 将通过与 `process.env.NODE_ENV` 环境变量关联,我们可以使用 webpack 内置的 `DefinePlugin` 为所有的依赖定义这个变量
+> 还要注意，任何位于 /src 的本地代码都可以关联到 process.env.NODE_ENV 环境变量
