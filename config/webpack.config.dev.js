@@ -4,6 +4,7 @@ const merge = require('webpack-merge')
 const base = require('./webpack.config.base.js')
 
 module.exports = merge(base, {
+  mode: 'development',
   devtool: 'inline-source-map',
   plugins: [
     new webpack.NamedModulesPlugin,

@@ -252,5 +252,114 @@ if (module.hot) {
 在生产环境中启用 source map，因为它们对调试源码(debug)和运行基准测试(benchmark tests)很有帮助。虽然有如此强大的功能，然而还是应该针对生成环境用途，选择一个构建快速的推荐配置（具体细节请查看 [devTool](https://www.webpackjs.com/configuration/devtool/ 'title')）
 
 ### 指定环境
-许多 library 将通过与 `process.env.NODE_ENV` 环境变量关联,我们可以使用 webpack 内置的 `DefinePlugin` 为所有的依赖定义这个变量
+许多 library 将通过与 `process.env.NODE_ENV` 环境变量关联,我们可以使用 webpack 内置的 `DefinePlugin` 为所有的依赖定义这个变量 (现在直接使用mode配置)
 > 还要注意，任何位于 /src 的本地代码都可以关联到 process.env.NODE_ENV 环境变量
+```javascript
+const webpack = require('webpack')
+...
+plugins: [
+  ...,
+  new webpack.DefinePlugin({
+    'process.env.NODE_ENV': JSON.stringify('production')
+  })
+]
+```
+
+```javascript
+module.exports = {
+  ...
+  mode: 'production/development',
+  ...
+}
+```
+
+
+### split CSS
+使用 `ExtractTextPlugin` 将 CSS 分离成单独的文件。在插件文档中有一些很好的实现例子。`disable` 选项可以和 `--env` 标记结合使用，以允许在开发中进行内联加载，推荐用于热模块替换和构建速度。
+
+以上方法不适用与webpack4+，请使用`mini-css-extract-plugin`  
+`npm install mini-css-extract-plugin --save-dev`
+
+
+## 代码分离
+有三种常用的代码分离方法：
+- 入口起点：使用 entry 配置手动地分离代码。
+- 防止重复：使用 CommonsChunkPlugin 去重和分离 chunk。
+- 动态导入：通过模块的内联函数调用来分离代码。
+
+### 入口起点
+手动分配多个入口
+```javascript
+...
+entry: {
+  index: './src/index.js',
+  another: './src/another-module.js'
+}
+...
+plugins: [
+  new HTMLWebpackPlugin({
+    title: 'Code Splitting'
+  })
+]
+...
+```
+缺点：
+- 如果入口 `chunks` 之间包含重复的模块，那些重复模块都会被引入到各个 `bundle` 中。
+- 这种方法不够灵活，并且不能将核心应用程序逻辑进行动态拆分代码。
+
+### 防止重复
+`CommonsChunkPlugin` 插件可以将公共的依赖模块提取到已有的入口 `chunk` 中，或者提取到一个新生成的 `chunk`
+> `CommonsChunkPlugin` 在此版本webpack已被移除，使用 `splitChunk`
+
+### 动态导入
+
+- `import()`语法
+- `require.ensure`
+
+1. 动态导入来分离一个`chunk`，异步加载的文件将被`chunkFilename`配置命名
+```javascript
+ output: {
+  filename: '[name].bundle.js',
+  chunkFilename: '[name].bundle.js',
+  path: path.resolve(__dirname, 'dist')
+}
+```
+src/index/js
+
+```javascript
+...
+function getComponent() {
+  // webpackChunkname: 'lodash'
+  return import('lodash').then(_ => {
+    var el = document.createElement('div')
+    el.innerHTML = _.join(['hello', 'webpack'], ',')
+    return el
+  }).catch(err => 'An error occurred while loading the component')
+}
+getComponent().then(component => {
+  document.body.appendChild(component)
+})
+```
+
+改写：
+
+```javascript
+...
+async function getComponent() {
+  var el = document.createElement('div')
+  const _ = await import('lodash)
+  el.innerHtml = _.join(['hello', 'webpack'], ',')
+}
+getComponent().then(component => {
+  document.body.appendChild(component)
+})
+```
+> 需要安装预处理器 `Syntax Dynamic Import Babel Plugin`  
+`npm install --save-dev @babel/plugin-syntax-dynamic-import`  
+`.babelrc`文件配置：
+```javascript
+{
+  "plugins": ["@babel/plugin-syntax-dynamic-import"]
+}
+```
+
