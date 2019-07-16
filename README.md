@@ -363,3 +363,57 @@ getComponent().then(component => {
 }
 ```
 
+## 缓存
+可以通过命中缓存，以降低网络流量，使网站加载速度更快，然而，如果我们在部署新版本时不更改资源的文件名，浏览器可能会认为它没有被更新，就会使用它的缓存版本。  
+通过必要的配置，以确保 webpack 编译生成的文件能够被客户端缓存，而在文件内容变化后，能够请求到新的文件。
+
+### 输出文件的文件名
+通过使用 output.filename 进行文件名替换，可以确保浏览器获取到修改后的文件。使用 `[contenthash]]` 替换
+```javascript
+output: {
+  filename: '[name].[contenthash].js',
+  path: path.resolve(__dirname, 'dist')
+}
+```
+
+> `contenthash`不能与热更新(HMR)同时使用
+
+### 提取模版
+webpack provides an optimization feature to split runtime code into a separate chunk using the `optimization.runtimeChunk` option. Set it to single to create a single runtime bundle for all chunks:
+
+```javascript
+optimization: {
+  runtimeChunk: 'single' // 运行时代码块单独打包
+}
+```
+将第三方库(library)（例如 lodash 或 react）提取到单独的 `vendor chunk` 文件中，它们很少像本地的源代码那样频繁修改。因此通过实现以上步骤，利用客户端的长效缓存机制，可以通过命中缓存来消除请求，并减少向服务器获取资源，同时还能保证客户端代码和服务器端代码版本一致
+```javascript
+optimization: {
+    runtimeChunk: 'single', // 运行时代码块单独打包
+    splitChunks: { // 分块打包代码
+      cacheGroups: {
+        vender: { // 第三方库
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all' //代码块会被多个入口共享&按需加载
+        }
+      }
+    }
+  }
+```
+
+### 模块标识符
+经过以上步骤，进行构建，我们期望当功能代码发生变化时(修改index.js文件的代码)只有`app`bundle的hash发生变化，然而runtime和vendors的bundle的hash都发生了变化。  
+这是因为每个 `module.id` 会基于默认的解析顺序(resolve order)进行增量。也就是说，当解析顺序发生变化，ID 也会随之改变。因此，简要概括：
+
+- main bundle 会随着自身的新增内容的修改，而发生变化。
+- vendor bundle 会随着自身的 `module.id` 的修改，而发生变化。
+- manifest bundle 会因为当前包含一个新模块的引用，而发生变化。
+
+第一个和最后一个都是符合预期的行为 -- 而 vendor 的 hash 发生变化是我们要修复的。可以使用`optimization.moduleIds` 选项值'hashed'来达到目的
+```javascript
+optimization: {
+  moduleIds: 'hashed',
+  ...
+}
+```

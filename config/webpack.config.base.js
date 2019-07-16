@@ -9,12 +9,13 @@ module.exports = {
     // another: './src/another-module.js'
   },
   output: {
-    filename: '[name].bundle.js',
-    chunkFilename: '[name].bundle.js',
+    filename: '[name].[contenthash].js',
+    chunkFilename: '[name].[contenthash].js',
     path: path.resolve(__dirname, '../dist'),
     // publicPath: '/dist/' //也会在服务器脚本中用到，以确保文件能在 http://localhost:port 下能正确访问
   },
   optimization: {
+    moduleIds: 'hashed',
     runtimeChunk: 'single', // 运行时代码块单独打包
     splitChunks: { // 分块打包代码
       cacheGroups: {
